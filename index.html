@@ -1,19 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TaskFlow Pro</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    text-align: center;
+}
+
+input, select {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin: 5px;
+}
+
+button {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    background: #00c6ff;
+    color: white;
+    cursor: pointer;
+    margin: 3px;
+}
+
+li {
+    list-style: none;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+</style>
+</head>
+
+<body>
+
+<h1>Task Manager</h1>
+
+<input id="task" placeholder="Enter task">
+<select id="priority">
+    <option>Low</option>
+    <option>Medium</option>
+    <option>High</option>
+</select>
+<button onclick="addTask()">Add</button>
+
+<br><br>
+
+<input id="search" placeholder="Search..." onkeyup="searchTask()">
+
+<h3 id="count"></h3>
+
+<ul id="list"></ul>
+
+<button onclick="clearTasks()">Clear All</button>
+
 <script>
 function addTask() {
     let task = document.getElementById("task").value;
+    let priority = document.getElementById("priority").value;
+
+    if (!task) {
+        alert("Enter a task!");
+        return;
+    }
+
+    let time = new Date().toLocaleString();
 
     fetch("/tasks", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ task: task })
-    })
-    .then(() => {
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ task, priority, time })
+    }).then(() => {
         document.getElementById("task").value = "";
-        loadTasks(); // refresh list
-    })
-    .catch(err => console.log(err));
+        loadTasks();
+    });
 }
 
 function loadTasks() {
@@ -23,25 +94,56 @@ function loadTasks() {
         let list = document.getElementById("list");
         list.innerHTML = "";
 
+        document.getElementById("count").innerText = "Total Tasks: " + data.length;
+
         data.forEach((t, index) => {
             let li = document.createElement("li");
+
+            // priority color
+            if (t.priority === "High") li.style.background = "#ff6b6b";
+            if (t.priority === "Medium") li.style.background = "#feca57";
+            if (t.priority === "Low") li.style.background = "#1dd1a1";
+
             li.innerHTML = `
-                ${t.task}
+                <span style="text-decoration:${t.done ? 'line-through' : 'none'}">
+                    ${t.task} (${t.priority})
+                </span>
+                <br><small>${t.time}</small><br>
+                <button onclick="toggleTask(${index})">Done</button>
                 <button onclick="deleteTask(${index})">Delete</button>
             `;
+
             list.appendChild(li);
         });
-    })
-    .catch(err => console.log(err));
+    });
 }
 
-function deleteTask(index) {
-    fetch(`/tasks/${index}`, {
-        method: "DELETE"
-    })
+function toggleTask(index) {
+    fetch(`/tasks/${index}`, { method: "PUT" })
     .then(() => loadTasks());
 }
 
-// load on page start
+function deleteTask(index) {
+    fetch(`/tasks/${index}`, { method: "DELETE" })
+    .then(() => loadTasks());
+}
+
+function clearTasks() {
+    fetch("/tasks", { method: "DELETE" })
+    .then(() => loadTasks());
+}
+
+function searchTask() {
+    let input = document.getElementById("search").value.toLowerCase();
+    let items = document.querySelectorAll("li");
+
+    items.forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(input) ? "" : "none";
+    });
+}
+
 loadTasks();
 </script>
+
+</body>
+</html>
