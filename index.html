@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TaskFlow</title>
+</head>
+<body>
+
+<h2>Task Manager</h2>
+
+<input id="task" placeholder="Enter task">
+<button onclick="addTask()">Add</button>
+
+<ul id="list"></ul>
+
+<script>
+function addTask() {
+    let task = document.getElementById("task").value;
+
+    fetch("/tasks", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ task })
+    })
+    .then(() => {
+        document.getElementById("task").value = "";
+        loadTasks();
+    });
+}
+
+function loadTasks() {
+    fetch("/tasks")
+    .then(res => res.json())
+    .then(data => {
+        let list = document.getElementById("list");
+        list.innerHTML = "";
+
+        data.forEach(t => {
+            let li = document.createElement("li");
+            li.textContent = t.task;
+            list.appendChild(li);
+        });
+    });
+}
+
+loadTasks();
+</script>
+
+</body>
+</html>
