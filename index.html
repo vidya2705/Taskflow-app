@@ -38,10 +38,18 @@ function loadTasks() {
 
         data.forEach(t => {
             let li = document.createElement("li");
-            li.textContent = t.task;
-            list.appendChild(li);
+           li.innerHTML = `
+    ${t.task}
+    <button onclick="deleteTask(${index})">Delete</button>
+`;
+list.appendChild(li);
         });
     });
+}
+function deleteTask(index) {
+    fetch(`/tasks/${index}`, {
+        method: "DELETE"
+    }).then(() => loadTasks());
 }
 
 loadTasks();

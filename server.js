@@ -23,6 +23,10 @@ app.get("/tasks", (req, res) => {
 
 app.post("/tasks", (req, res) => {
     tasks.push(req.body);
+    app.delete("/tasks/:index", (req, res) => {
+    tasks.splice(req.params.index, 1);
+    res.send("Task deleted");
+});
 <<<<<<< HEAD
     res.json({ message: "Task added" });
 });
